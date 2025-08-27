@@ -143,7 +143,7 @@
         'https://i.imgur.com/V5ntYcC.png', //6
         'https://i.imgur.com/JmiuMRf.png', //7
         'https://i.imgur.com/S84Im2b.png', //8
-        'https://i.imgur.com/GvD8kYC.png', //9
+        'https://i.imgur.com/GvD8kYC.png' //9
       ]
     };
 
@@ -219,12 +219,12 @@
         return j.items || [];
       } catch (e) {
         console.warn('Leaderboard API failed, falling back to localStorage', e);
-        try { return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); } catch { return []; }
+        try { return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); } catch (e) { return []; }
       }
     }
 
     function loadLeaderboard(){
-      try{ return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); }catch{ return []; }
+      try{ return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); }catch (e) { return []; }
     }
     function saveLeaderboard(list){
       localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
