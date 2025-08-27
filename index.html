@@ -486,11 +486,12 @@
       resName.textContent = '@' + STATE.username;
     }
 
-    startBtn.addEventListener('click', async (e)=>{
+    startBtn.addEventListener('click', (e)=>{
       e.preventDefault();
       const val = usernameInput.value;
-      try { await applyUser(val); } catch (err) { console.warn('applyUser failed', err); }
+      try { applyUser(val).catch(()=>{}); } catch(_){}
       loginModal.classList.add('hidden');
+      loginModal.setAttribute('aria-hidden','true');
       resetGame();
     });
 
