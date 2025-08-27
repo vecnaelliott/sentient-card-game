@@ -223,26 +223,13 @@
       }
     }
 
-    // Fetch leaderboard from Vercel KV API (fallback to localStorage on failure)
-    async function loadLeaderboardFromAPI(limit = 50){
-      try {
-        const r = await fetch(`/api/score?n=${limit}`, { cache: 'no-store' });
-        const j = await r.json();
-        if (!j.ok) throw new Error('api_error');
-        return j.items || [];
-      } catch (e) {
-        console.warn('Leaderboard API failed, falling back to localStorage', e);
-        try { return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); } catch (e) { return []; }
-      }
-    }
-
     function loadLeaderboard(){
       try{ return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); }catch (e) { return []; }
     }
     function saveLeaderboard(list){
       localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
     }
-    async async function upsertLeaderboardEntry(username, avatar, timeMs){
+    async function upsertLeaderboardEntry(username, avatar, timeMs){
       try {
         await fetch('/api/score', {
           method: 'POST',
@@ -259,29 +246,9 @@
         localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
         await renderLeaderboard();
       }
-    },
-          body: JSON.stringify({ username, avatar, ms: timeMs })
-        });
-        await renderLeaderboard();
-      } catch (e) {
-        console.warn('Score API failed, saving locally as fallback', e);
-        const list = JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]');
-        const idx = list.findIndex(x => x.username === username);
-        if (idx === -1) list.push({ username, avatar, bestMs: timeMs });
-        else if (timeMs < list[idx].bestMs) list[idx].bestMs = timeMs;
-        localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
-        await renderLeaderboard();
-      }
-    });
-      else if (timeMs < list[idx].bestMs) list[idx].bestMs = timeMs;
-      // Keep the latest avatar
-      const i2 = list.findIndex(x => x.username === username);
-      if (i2 !== -1) list[i2].avatar = avatar;
-      list.sort((a,b)=> a.bestMs - b.bestMs);
-      saveLeaderboard(list);
-      renderLeaderboard();
     }
-    async async function renderLeaderboard(){
+
+    async function renderLeaderboard(){
       const items = await loadLeaderboardFromAPI(50);
       leaderboardEl.innerHTML = '';
       if (!items.length){
@@ -290,33 +257,6 @@
       }
       items.sort((a,b)=> a.bestMs - b.bestMs);
       items.forEach((e)=>{
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
-        li.innerHTML = `
-          <div class="flex items-center gap-2">
-            <img src="${e.avatar||''}" class="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" alt=""/>
-            <div class="text-sm font-medium">@${e.username}</div>
-          </div>
-          <div class="text-sm tabular-nums">${fmt(e.bestMs)}</div>
-        `;
-        leaderboardEl.appendChild(li);
-      });
-    }
-      items.sort((a,b)=> a.bestMs - b.bestMs);
-      items.forEach((e)=>{
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
-        li.innerHTML = `
-          <div class="flex items-center gap-2">
-            <img src="${e.avatar||''}" class="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" alt=""/>
-            <div class="text-sm font-medium">@${e.username}</div>
-          </div>
-          <div class="text-sm tabular-nums">${fmt(e.bestMs)}</div>
-        `;
-        leaderboardEl.appendChild(li);
-      });
-    }
-      list.forEach((e, i)=>{
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
         li.innerHTML = `
@@ -538,12 +478,6 @@
     }
     startBtn.onclick = startGameFromLogin;
     startBtn.addEventListener('click', startGameFromLogin);
-      const val = usernameInput.value;
-      try { applyUser(val).catch(()=>{}); } catch(_){}
-      loginModal.classList.add('hidden');
-      loginModal.setAttribute('aria-hidden','true');
-      resetGame();
-    });
 
     playBtn.addEventListener('click', ()=>{
       playOverlay.classList.add('hidden');
