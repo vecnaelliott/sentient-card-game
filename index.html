@@ -70,8 +70,11 @@
   <div class="flex justify-end">
     <div id="topTimer" class="glass rounded-xl px-3 py-2 glow-pane border border-white/10 text-sm md:text-base text-gray-200">Time: <span id="timeText">0.000s</span></div>
   </div>
-</header>n></di<div class="flex justify-center">->
-      <section class="relative w-fu<section class="relative w-full max-w-[clamp(280px,44vw,520px)] mx-auto">,520px)] mx-auto">
+</header>
+
+    <div class="flex justify-center">
+      <!-- LEFT: Game area -->
+      <section class="relative w-full max-w-[clamp(280px,44vw,520px)] mx-auto">
         <!-- Instruction panel -->
         <div class="mb-3 p-3 rounded-xl glass glow-pane border border-white/10 gradient-border">
           <p class="text-[0.95rem] md:text-base text-gray-200">"You have 10 seconds to memorize all cards"</p>
@@ -90,7 +93,21 @@
             <!-- Cards injected here -->
           </div>
         </div>
-       id="startBtn" class="w-full btn-grad text-white font-semibold py-3 rounded-xl border border-white/10">Start</button>
+      </section>
+
+      
+    </div>
+  </main>
+
+  <!-- LOGIN POPUP -->
+  <div id="loginModal" class="fixed inset-0 z-pop flex items-center justify-center backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
+    <div class="relative w-[92%] max-w-md rounded-2xl glass glow-pane border border-white/10 p-6">
+      <h3 class="text-lg font-semibold mb-1">Your X Username</h3>
+      <p class="text-sm text-gray-400 mb-4">Enter your handle to show your avatar in-game.</p>
+      <div class="space-y-3">
+        <input id="usernameInput" type="text" placeholder="e.g. elliottyu" class="w-full rounded-xl bg-black/50 border border-white/15 px-4 py-3 outline-none focus:ring-2 focus:ring-fuchsia-400/60" />
+        <button id="startBtn" class="w-full btn-grad text-white font-semibold py-3 rounded-xl border border-white/10">Start</button>
       </div>
     </div>
   </div>
@@ -157,7 +174,11 @@
       // Try Twitter provider first, then X provider fallback
       return {
         primary: `https://unavatar.io/twitter/${encodeURIComponent(h)}`,
-        fallback: `https://unavatar.io/x/${encodeURIComponent(h)}`ror=()=>res(null); i.src=url; });
+        fallback: `https://unavatar.io/x/${encodeURIComponent(h)}`
+      };
+    }
+    function testImg(url){
+      return new Promise(res=>{ const i=new Image(); i.onload=()=>res(url); i.onerror=()=>res(null); i.src=url; });
     }
     async function pickWorkingAvatar(handle){
       const { primary, fallback } = avatarUrlFor(handle);
@@ -202,7 +223,75 @@
       });
       // Set sizes responsively by measuring container
       sizeCards();
-      window.addEventList// ---------- Board Rendering ----------(!STATE.startTime){
+      window.addEventListener('resize', sizeCards);
+    }
+
+    function sizeCards(){
+      const cols = 3;
+      const gap = parseFloat(getComputedStyle(boardEl).gap) || 12;
+      const frame = document.getElementById('boardFrame');
+      const frameRect = frame.getBoundingClientRect();
+      const frameStyle = getComputedStyle(frame);
+      const boardStyle = getComputedStyle(boardEl);
+
+      const viewportH = window.innerHeight;
+      const framePadY = (parseFloat(frameStyle.paddingTop)||0) + (parseFloat(frameStyle.paddingBottom)||0);
+      const boardPadY = (parseFloat(boardStyle.paddingTop)||0) + (parseFloat(boardStyle.paddingBottom)||0);
+      const reserve = 28; // leave a small bottom margin so the frame's border is visible
+
+      const availableForBoard = Math.max(180, viewportH - frameRect.top - framePadY - reserve);
+
+      const w = boardEl.clientWidth;
+      const cardW_byWidth = (w - gap*(cols-1)) / cols;
+      const maxCardH = (availableForBoard - boardPadY - gap*(3-1)) / 3;
+      const cardW_byHeight = maxCardH * (3/4);
+
+      const cardW = Math.max(72, Math.min(cardW_byWidth, cardW_byHeight));
+      const cardH = cardW * (4/3);
+
+      Array.from(boardEl.children).forEach(el => {
+        el.style.width = cardW + 'px';
+        el.style.height = cardH + 'px';
+      });
+    }
+
+    // ---------- Game Flow ----------
+    function resetGame(){
+      STATE.order = shuffle([1,2,3,4,5,6,7,8,9]);
+      STATE.nextExpected = 1;
+      STATE.phase = 'idle';
+      STATE.startTime = 0;
+      STATE.matched = new Set();
+      timeText.textContent = '0.000s';
+      clearInterval(STATE.timerInterval); STATE.timerInterval = null;
+      boardEl.classList.remove('dim-others');
+      renderBoard();
+      // Hide numbers until Play is pressed (show backs + blur)
+      Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.add('flipped'));
+      boardEl.classList.add('prestart');
+      playOverlay.classList.remove('hidden');
+    }
+
+    function startMemorize(){
+      STATE.phase = 'memorize';
+      // Remove blur and show fronts for 10s
+      playOverlay.classList.add('hidden');
+      boardEl.classList.remove('prestart');
+      Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.remove('flipped'));
+      // After 10s, flip all to back and start guessing
+      setTimeout(()=>{
+        Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.add('flipped'));
+        STATE.phase = 'guess';
+      }, 10_000);
+    }
+
+    function onCardClick(card){
+      if (STATE.phase !== 'guess') return;
+      const num = parseInt(card.dataset.num);
+      const already = STATE.matched.has(num);
+      if (already) return;
+
+      if (!STATE.startTime){
         STATE.startTime = performance.now();
         STATE.timerInterval = setInterval(()=>{
           if (!STATE.startTime) return; // safety
@@ -228,7 +317,7 @@
         if (expectedCard){ expectedCard.classList.remove('flipped'); }
         boardEl.classList.add('dim-others');
         card.classList.add('highlight');
-        if (expectedCard) expectedCard.ight');
+        if (expectedCard) expectedCard.classList.add('highlight');
         // lock board temporarily
         STATE.phase = 'locked';
         setTimeout(()=> onLose(), 3000);
@@ -247,7 +336,7 @@
     }
 
     function showResult(type, elapsed){
-     hell
+      // prepare shared shell
       resAvatar.src = STATE.avatar || '';
       resName.textContent = '@' + STATE.username;
       resContent.innerHTML = '';
@@ -323,10 +412,12 @@
     playBtn.addEventListener('click', ()=>{
       playOverlay.classList.add('hidden');
       startMemorize();
-renderLeaderboard();
-   .key==='Enter'){ startBtn.click(); }});
+    });
 
-    // Initialize with lrenderLeaderboard();
+    usernameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ startBtn.click(); }});
+
+    // Initialize with login modal open
+    
   </script>
 
   <!-- Deployment Notes (read-only in HTML source) -->
