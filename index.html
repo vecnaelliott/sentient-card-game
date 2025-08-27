@@ -101,13 +101,13 @@
           <button id="clearLB" class="text-xs text-gray-400 hover:text-gray-200 underline">(clear local)</button>
         </div>
         <ul id="leaderboard" class="space-y-2 text-sm"></ul>
-        <p class="mt-4 text-xs text-gray-400">Times are saved locally per browser. See notes below for a global leaderboard.</p>
       </aside>
     </div>
   </main>
 
   <!-- LOGIN POPUP -->
   <div id="loginModal" class="fixed inset-0 z-pop flex items-center justify-center backdrop-blur-sm">
+    <!-- Arka plan tıklamayı engellemesin -->
     <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
     <div class="relative w-[92%] max-w-md rounded-2xl glass glow-pane border border-white/10 p-6">
       <h3 class="text-lg font-semibold mb-1">Your X Username</h3>
@@ -143,7 +143,7 @@
         'https://i.imgur.com/V5ntYcC.png', //6
         'https://i.imgur.com/JmiuMRf.png', //7
         'https://i.imgur.com/S84Im2b.png', //8
-        'https://i.imgur.com/GvD8kYC.png' //9
+        'https://i.imgur.com/GvD8kYC.png' //9  (son elemandan sonra virgül yok)
       ]
     };
 
@@ -210,43 +210,16 @@
     }
     function fmt(ms){ return (ms/1000).toFixed(3) + 's'; }
 
-    // Fetch leaderboard from Vercel KV API (fallback to localStorage on failure)
-    async function loadLeaderboardFromAPI(limit = 50){
-      try {
-        const r = await fetch(`/api/score?n=${limit}`, { cache: 'no-store' });
-        const j = await r.json();
-        if (!j.ok) throw new Error('api_error');
-        return j.items || [];
-      } catch (e) {
-        console.warn('Leaderboard API failed, falling back to localStorage', e);
-        try { return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); } catch (e) { return []; }
-      }
-    }
-
     function loadLeaderboard(){
       try{ return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); }catch (e) { return []; }
     }
     function saveLeaderboard(list){
       localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
     }
-    async function upsertLeaderboardEntry(username, avatar, timeMs){
-      try {
-        await fetch('/api/score', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, avatar, ms: timeMs })
-        });
-        await renderLeaderboard();
-      } catch (e) {
-        console.warn('Score API failed, saving locally as fallback', e);
-        const list = JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]');
-        const idx = list.findIndex(x => x.username === username);
-        if (idx === -1) list.push({ username, avatar, bestMs: timeMs });
-        else if (timeMs < list[idx].bestMs) list[idx].bestMs = timeMs;
-        localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
-        await renderLeaderboard();
-      }
-    });
+    function upsertLeaderboardEntry(username, avatar, timeMs){
+      const list = loadLeaderboard();
+      const idx = list.findIndex(x => x.username === username);
+      if (idx === -1) list.push({ username, avatar, bestMs: timeMs });
       else if (timeMs < list[idx].bestMs) list[idx].bestMs = timeMs;
       // Keep the latest avatar
       const i2 = list.findIndex(x => x.username === username);
@@ -255,27 +228,13 @@
       saveLeaderboard(list);
       renderLeaderboard();
     }
-    async function renderLeaderboard(){
-      const items = await loadLeaderboardFromAPI(50);
+    function renderLeaderboard(){
+      const list = loadLeaderboard();
       leaderboardEl.innerHTML = '';
-      if (!items.length){
+      if (!list.length){
         leaderboardEl.innerHTML = '<li class="text-gray-400">No scores yet. Win a round to appear here.</li>';
         return;
       }
-      items.sort((a,b)=> a.bestMs - b.bestMs);
-      items.forEach((e)=>{
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
-        li.innerHTML = `
-          <div class="flex items-center gap-2">
-            <img src="${e.avatar||''}" class="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" alt=""/>
-            <div class="text-sm font-medium">@${e.username}</div>
-          </div>
-          <div class="text-sm tabular-nums">${fmt(e.bestMs)}</div>
-        `;
-        leaderboardEl.appendChild(li);
-      });
-    }
       list.forEach((e, i)=>{
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
@@ -486,17 +445,19 @@
       resName.textContent = '@' + STATE.username;
     }
 
+    // Start: await beklemeden, anında kapat
     startBtn.addEventListener('click', (e)=>{
       e.preventDefault();
       const val = usernameInput.value;
-      try { applyUser(val).catch(()=>{}); } catch(_){}
+      // Avatar yükleme arkada kalsın; başarısız olursa fallback var
+      applyUser(val).catch((err)=>console.warn('applyUser failed', err));
       loginModal.classList.add('hidden');
       loginModal.setAttribute('aria-hidden','true');
       resetGame();
     });
 
-    playBtn.addEventListener('click', ()=>{
-      playOverlay.classList.add('hidden');
+    playBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
       startMemorize();
     });
 
