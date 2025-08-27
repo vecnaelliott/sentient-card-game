@@ -1,96 +1,493 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script defer src="/_vercel/insights/script.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css"
-    />
-    <title>Vercel HTML Starter</title>
-    <meta
-      name="description"
-      content="High-performance HTML based website template."
-    />
-  </head>
-  <body>
-    <h1>Vercel HTML Starter</h1>
-    <p>
-      This template is a simple, but powerful single
-      <code>index.html</code> file deployed to
-      <a href="https://vercel.com">Vercel</a>. When your site is deployed, all
-      static assets (like HTML, JavaScript, CSS, images, and more) are deployed
-      globally to every
-      <a href="https://vercel.com/docs/concepts/edge-network/overview"
-        >Vercel Edge Network</a
-      >
-      region.
-    </p>
-    <h2>Simple, privacy-friendly analytics</h2>
-    <p>
-      Want to understand your visitor traffic? Vercel Analytics gives you
-      first-party, privacy-friendly traffic analytics for your HTML site. This
-      template is already configured using the following script:
-    </p>
-    <pre><code>&lt;script defer src="/_vercel/insights/script.js"&gt;&lt;/script&gt;</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/analytics">Vercel Analytics</a>.
-    </p>
-    <h2>Integrated with git</h2>
-    <p>
-      Deploying updates to your site is as simple as
-      <code>git push</code> thanks to Vercel's advanced
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-      Support for GitHub, GitLab, Bitbucket is zero-configuration, and with the
-      flexible Vercel CLI and API, you can integrate with any tool possible.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-    </p>
-    <h2>Fast <code>gzip</code> compression</h2>
-    <p>
-      To help ensure the smallest possible file sizes for your static assets,
-      the Vercel Edge Network compresses files by default using
-      <code>gzip</code>. You can also optionally use
-      <code>brotli</code> compressesion if you prefer.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/edge-network/compression"
-        >compression</a
-      >.
-    </p>
-    <h2>Advanced routing configuration</h2>
-    <p>
-      Vercel gives you a variety of ways to configure the routing of your
-      website. For example, adding redirects, rewrites, or headers to your page.
-      While you can use <code>vercel.json</code> to define these through JSON,
-      you can also express your routing configuration as code using
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-    <p>
-      Middleware runs before the
-      <a href="https://vercel.com/docs/concepts/edge-network/caching"
-        >Vercel Edge Network Cache</a
-      >, so you can configure routing exactly as your application needs. For
-      example, this template uses <code>middleware.js</code> defined in the root
-      of the repository to add additional security headers to the site:
-    </p>
-    <pre><code>referrer-policy: origin-when-cross-origin
-strict-transport-security: max-age=31536000; includeSubDomains; preload
-x-content-type-options: nosniff
-x-dns-prefetch-control: on
-x-frame-options: DENY</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentient Card Memory Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --accent1: 236 72 153;   /* fuchsia-500 */
+      --accent2: 14 165 233;   /* sky-500 */
+      --accent3: 139 92 246;   /* violet-500 */
+    }
+    /* Background image */
+    .bg-app { background-image: url('https://i.imgur.com/oCrKTG2.png'); background-size: cover; background-position: center; }
+
+    /* Pretty gradients & glow */
+    .btn-grad { background: linear-gradient(135deg, rgba(var(--accent1)/0.9), rgba(var(--accent3)/0.9), rgba(var(--accent2)/0.9)); box-shadow: 0 0 20px rgba(139,92,246,0.3), inset 0 0 12px rgba(255,255,255,0.08); }
+    .btn-grad:hover { filter: brightness(1.05); box-shadow: 0 0 30px rgba(14,165,233,0.35), inset 0 0 14px rgba(255,255,255,0.12); }
+    .glow-pane { box-shadow: 0 0 40px rgba(139,92,246,0.25), inset 0 0 30px rgba(255,255,255,0.06); }
+
+    /* Gradient border utility (glossy frame) */
+    .gradient-border { position: relative; border-radius: 1rem; }
+    .gradient-border::before { content: ""; position: absolute; inset: -2px; border-radius: inherit; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(200,200,200,0.65)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 2px; }
+
+    /* Card flip */
+    .card { perspective: 1000px; cursor: pointer; }
+    .card.disabled { pointer-events: none; }
+    .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 600ms ease; border-radius: 0.75rem; }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 0.75rem; overflow: hidden; }
+    .card-front { transform: rotateY(0); }
+    .card-back { transform: rotateY(180deg); }
+    .card-face img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+    /* Dim all except highlighted */
+    .board.dim-others .card { filter: blur(2px) brightness(0.6); transition: filter 180ms ease; }
+    .board.dim-others .card.highlight { filter: none; outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 18px rgba(236,72,153,0.5); }
+
+    /* Prestart blur (hide numbers before Play) */
+    .board.prestart { filter: blur(10px) brightness(0.25); }
+
+    /* Utility for glass panels */
+    .glass { backdrop-filter: blur(8px) saturate(120%); background: rgba(17,17,17,0.45); }
+
+    /* Ensure popups sit above */
+    .z-pop { z-index: 60; }
+    html,body{height:100%;overflow:hidden;}
+    main{height:100vh;overflow:hidden;}
+  </style>
+</head>
+<body class="bg-black text-gray-100 h-screen overflow-hidden">
+  <div class="fixed inset-0 bg-app"></div>
+  <div class="fixed inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70"></div>
+
+  <main class="relative z-10 container mx-auto px-4 py-4 lg:py-6 h-full">
+    <header class="mb-6 grid grid-cols-[1fr_auto_1fr] items-start">
+  <div></div>
+  <div class="flex flex-col items-center gap-2">
+    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-gray-100 text-center">Sentient Card Memory Game</h1>
+    <div class="flex items-center gap-3 glass rounded-xl px-3 py-2 glow-pane border border-white/10">
+      <img id="profileAvatar" src="" alt="avatar" class="w-9 h-9 rounded-full ring-2 ring-white/30 object-cover"/>
+      <div class="leading-tight">
+        <div class="text-xs uppercase tracking-wide text-gray-300">Player</div>
+        <div id="profileName" class="font-medium -mt-0.5">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="flex justify-end">
+    <div id="topTimer" class="glass rounded-xl px-3 py-2 glow-pane border border-white/10 text-sm md:text-base text-gray-200">Time: <span id="timeText">0.000s</span></div>
+  </div>
+</header>
+
+    <div class="grid lg:grid-cols-[clamp(280px,44vw,520px)_minmax(0,1fr)] gap-6 items-start">
+      <!-- LEFT: Game area -->
+      <section class="relative">
+        <!-- Instruction panel -->
+        <div class="mb-3 p-3 rounded-xl glass glow-pane border border-white/10 gradient-border">
+          <p class="text-[0.95rem] md:text-base text-gray-200">"You have 10 seconds to memorize all cards"</p>
+          <p class="text-[0.95rem] md:text-base text-gray-200">"Then click them in order from 1 to 9"</p>
+          <p class="text-[0.95rem] md:text-base text-gray-200">"A wrong pick ends the game"</p>
+        </div>
+
+        <!-- Board frame -->
+        <div id="boardFrame" class="relative gradient-border p-3">
+          <!-- Play overlay -->
+          <div id="playOverlay" class="absolute inset-0 flex items-center justify-center glass rounded-xl z-[30]">
+            <button id="playBtn" class="btn-grad text-sm md:text-base font-semibold px-6 py-3 rounded-xl border border-white/10 text-white">Play</button>
+          </div>
+
+          <div id="board" class="board grid grid-cols-3 gap-3 md:gap-4 p-2 md:p-3 rounded-xl bg-black/30 border border-white/10">
+            <!-- Cards injected here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Leaderboard -->
+      <aside class="rounded-2xl glass glow-pane border border-white/10 gradient-border p-4 max-h-[calc(100vh-160px)] overflow-auto">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-semibold">Leaderboard</h2>
+          <button id="clearLB" class="text-xs text-gray-400 hover:text-gray-200 underline">(clear local)</button>
+        </div>
+        <ul id="leaderboard" class="space-y-2 text-sm"></ul>
+        <p class="mt-4 text-xs text-gray-400">Times are saved locally per browser. See notes below for a global leaderboard.</p>
+      </aside>
+    </div>
+  </main>
+
+  <!-- LOGIN POPUP -->
+  <div id="loginModal" class="fixed inset-0 z-pop flex items-center justify-center backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative w-[92%] max-w-md rounded-2xl glass glow-pane border border-white/10 p-6">
+      <h3 class="text-lg font-semibold mb-1">Your X Username</h3>
+      <p class="text-sm text-gray-400 mb-4">Enter your handle to show your avatar in-game.</p>
+      <div class="space-y-3">
+        <input id="usernameInput" type="text" placeholder="e.g. elliottyu" class="w-full rounded-xl bg-black/50 border border-white/15 px-4 py-3 outline-none focus:ring-2 focus:ring-fuchsia-400/60" />
+        <button id="startBtn" class="w-full btn-grad text-white font-semibold py-3 rounded-xl border border-white/10">Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIN/LOSE POPUP (shared shell) -->
+  <div id="resultModal" class="hidden fixed inset-0 z-pop items-center justify-center">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative w-[92%] max-w-md rounded-2xl glass glow-pane border border-white/10 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <img id="resAvatar" src="" class="w-10 h-10 rounded-full ring-2 ring-white/30 object-cover" alt="avatar"/>
+        <div class="font-medium" id="resName">@user</div>
+      </div>
+      <div id="resContent" class="space-y-3 text-center"></div>
+    </div>
+  </div>
+
+  <script>
+    const IMG = {
+      back: 'https://i.imgur.com/THL2AeS.png',
+      fronts: [
+        'https://i.imgur.com/sbsoUjs.png', //1
+        'https://i.imgur.com/KanuBuv.png', //2
+        'https://i.imgur.com/niuKR7F.png', //3
+        'https://i.imgur.com/yPL3ynz.png', //4
+        'https://i.imgur.com/kFsygE0.png', //5
+        'https://i.imgur.com/V5ntYcC.png', //6
+        'https://i.imgur.com/JmiuMRf.png', //7
+        'https://i.imgur.com/S84Im2b.png', //8
+        'https://i.imgur.com/GvD8kYC.png', //9
+      ]
+    };
+
+    const boardEl = document.getElementById('board');
+    const playOverlay = document.getElementById('playOverlay');
+    const playBtn = document.getElementById('playBtn');
+    const loginModal = document.getElementById('loginModal');
+    const usernameInput = document.getElementById('usernameInput');
+    const startBtn = document.getElementById('startBtn');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileName = document.getElementById('profileName');
+    const timeText = document.getElementById('timeText');
+    const resultModal = document.getElementById('resultModal');
+    const resAvatar = document.getElementById('resAvatar');
+    const resName = document.getElementById('resName');
+    const resContent = document.getElementById('resContent');
+    const leaderboardEl = document.getElementById('leaderboard');
+    const clearLBBtn = document.getElementById('clearLB');
+
+    let STATE = {
+      username: '',
+      avatar: '',
+      order: [],           // shuffled numbers 1..9 (positions)
+      nextExpected: 1,
+      phase: 'idle',       // 'idle' | 'memorize' | 'guess'
+      startTime: 0,
+      timerInterval: null,
+      matched: new Set(),
+    };
+
+    // ---------- Helpers ----------
+    function sanitizeHandle(v){
+      return (v || '').toString().trim().replace(/^@+/, '').toLowerCase();
+    }
+    function avatarUrlFor(handle){
+      const h = sanitizeHandle(handle);
+      // Try Twitter provider first, then X provider fallback
+      return {
+        primary: `https://unavatar.io/twitter/${encodeURIComponent(h)}`,
+        fallback: `https://unavatar.io/x/${encodeURIComponent(h)}`
+      };
+    }
+    function testImg(url){
+      return new Promise(res=>{ const i=new Image(); i.onload=()=>res(url); i.onerror=()=>res(null); i.src=url; });
+    }
+    async function pickWorkingAvatar(handle){
+      const { primary, fallback } = avatarUrlFor(handle);
+      const generic = `https://unavatar.io/${encodeURIComponent(handle)}`;
+      const dice = `https://api.dicebear.com/7.x/shapes/png?seed=${encodeURIComponent(handle)}`;
+      const candidates = [primary, fallback, generic];
+      for (const u of candidates){
+        const ok = await testImg(u);
+        if (ok) return ok;
+      }
+      return dice;
+    }
+    function shuffle(arr){
+      const a = arr.slice();
+      for (let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+    function fmt(ms){ return (ms/1000).toFixed(3) + 's'; }
+
+    function loadLeaderboard(){
+      try{ return JSON.parse(localStorage.getItem('sentientCardLeaderboard')||'[]'); }catch{ return []; }
+    }
+    function saveLeaderboard(list){
+      localStorage.setItem('sentientCardLeaderboard', JSON.stringify(list));
+    }
+    function upsertLeaderboardEntry(username, avatar, timeMs){
+      const list = loadLeaderboard();
+      const idx = list.findIndex(x => x.username === username);
+      if (idx === -1) list.push({ username, avatar, bestMs: timeMs });
+      else if (timeMs < list[idx].bestMs) list[idx].bestMs = timeMs;
+      // Keep the latest avatar
+      const i2 = list.findIndex(x => x.username === username);
+      if (i2 !== -1) list[i2].avatar = avatar;
+      list.sort((a,b)=> a.bestMs - b.bestMs);
+      saveLeaderboard(list);
+      renderLeaderboard();
+    }
+    function renderLeaderboard(){
+      const list = loadLeaderboard();
+      leaderboardEl.innerHTML = '';
+      if (!list.length){
+        leaderboardEl.innerHTML = '<li class="text-gray-400">No scores yet. Win a round to appear here.</li>';
+        return;
+      }
+      list.forEach((e, i)=>{
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-3 py-2';
+        li.innerHTML = `
+          <div class="flex items-center gap-2">
+            <img src="${e.avatar||''}" class="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" alt=""/>
+            <div class="text-sm font-medium">@${e.username}</div>
+          </div>
+          <div class="text-sm tabular-nums">${fmt(e.bestMs)}</div>
+        `;
+        leaderboardEl.appendChild(li);
+      });
+    }
+
+    // ---------- Board Rendering ----------
+    function renderBoard(){
+      boardEl.innerHTML = '';
+      STATE.order.forEach(num=>{
+        const card = document.createElement('div');
+        card.className = 'card aspect-[3/4] w-full rounded-xl';
+        card.dataset.num = String(num);
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-front bg-black/40">
+              <img src="${IMG.fronts[num-1]}" alt="${num}"/>
+            </div>
+            <div class="card-face card-back bg-black/40">
+              <img src="${IMG.back}" alt="back"/>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', ()=> onCardClick(card));
+        boardEl.appendChild(card);
+      });
+      // Set sizes responsively by measuring container
+      sizeCards();
+      window.addEventListener('resize', sizeCards);
+    }
+
+    function sizeCards(){
+      const cols = 3;
+      const gap = parseFloat(getComputedStyle(boardEl).gap) || 12;
+      const frame = document.getElementById('boardFrame');
+      const frameRect = frame.getBoundingClientRect();
+      const frameStyle = getComputedStyle(frame);
+      const boardStyle = getComputedStyle(boardEl);
+
+      const viewportH = window.innerHeight;
+      const framePadY = (parseFloat(frameStyle.paddingTop)||0) + (parseFloat(frameStyle.paddingBottom)||0);
+      const boardPadY = (parseFloat(boardStyle.paddingTop)||0) + (parseFloat(boardStyle.paddingBottom)||0);
+      const reserve = 28; // leave a small bottom margin so the frame's border is visible
+
+      const availableForBoard = Math.max(180, viewportH - frameRect.top - framePadY - reserve);
+
+      const w = boardEl.clientWidth;
+      const cardW_byWidth = (w - gap*(cols-1)) / cols;
+      const maxCardH = (availableForBoard - boardPadY - gap*(3-1)) / 3;
+      const cardW_byHeight = maxCardH * (3/4);
+
+      const cardW = Math.max(72, Math.min(cardW_byWidth, cardW_byHeight));
+      const cardH = cardW * (4/3);
+
+      Array.from(boardEl.children).forEach(el => {
+        el.style.width = cardW + 'px';
+        el.style.height = cardH + 'px';
+      });
+    }
+
+    // ---------- Game Flow ----------
+    function resetGame(){
+      STATE.order = shuffle([1,2,3,4,5,6,7,8,9]);
+      STATE.nextExpected = 1;
+      STATE.phase = 'idle';
+      STATE.startTime = 0;
+      STATE.matched = new Set();
+      timeText.textContent = '0.000s';
+      clearInterval(STATE.timerInterval); STATE.timerInterval = null;
+      boardEl.classList.remove('dim-others');
+      renderBoard();
+      // Hide numbers until Play is pressed (show backs + blur)
+      Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.add('flipped'));
+      boardEl.classList.add('prestart');
+      playOverlay.classList.remove('hidden');
+    }
+
+    function startMemorize(){
+      STATE.phase = 'memorize';
+      // Remove blur and show fronts for 10s
+      playOverlay.classList.add('hidden');
+      boardEl.classList.remove('prestart');
+      Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.remove('flipped'));
+      // After 10s, flip all to back and start guessing
+      setTimeout(()=>{
+        Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.add('flipped'));
+        STATE.phase = 'guess';
+      }, 10_000);
+    }
+
+    function onCardClick(card){
+      if (STATE.phase !== 'guess') return;
+      const num = parseInt(card.dataset.num);
+      const already = STATE.matched.has(num);
+      if (already) return;
+
+      if (!STATE.startTime){
+        STATE.startTime = performance.now();
+        STATE.timerInterval = setInterval(()=>{
+          if (!STATE.startTime) return; // safety
+          timeText.textContent = fmt(performance.now() - STATE.startTime);
+        }, 50);
+      }
+
+      // reveal clicked card (turn to front)
+      card.classList.remove('flipped');
+
+      if (num === STATE.nextExpected){
+        STATE.matched.add(num);
+        STATE.nextExpected++;
+        if (STATE.nextExpected > 9){
+          // last one still needs to be clicked; check win condition properly
+          if (STATE.matched.size === 9){
+            return onWin();
+          }
+        }
+      } else {
+        // Wrong selection: reveal expected card too, blur others for 3s then lose popup
+        const expectedCard = Array.from(document.querySelectorAll('.card')).find(c=> parseInt(c.dataset.num) === STATE.nextExpected);
+        if (expectedCard){ expectedCard.classList.remove('flipped'); }
+        boardEl.classList.add('dim-others');
+        card.classList.add('highlight');
+        if (expectedCard) expectedCard.classList.add('highlight');
+        // lock board temporarily
+        STATE.phase = 'locked';
+        setTimeout(()=> onLose(), 3000);
+      }
+    }
+
+    function onWin(){
+      clearInterval(STATE.timerInterval);
+      const elapsed = performance.now() - STATE.startTime;
+      timeText.textContent = fmt(elapsed);
+      upsertLeaderboardEntry(STATE.username, STATE.avatar, elapsed);
+      showResult('win', elapsed);
+    }
+    function onLose(){
+      clearInterval(STATE.timerInterval);
+      showResult('lose');
+    }
+
+    function showResult(type, elapsed){
+      // prepare shared shell
+      resAvatar.src = STATE.avatar || '';
+      resName.textContent = '@' + STATE.username;
+      resContent.innerHTML = '';
+
+      if (type === 'win'){
+        const title = document.createElement('div');
+        title.className = 'text-2xl font-semibold';
+        title.textContent = 'Congrats, gSenti!';
+        const t = document.createElement('div');
+        t.className = 'text-gray-300';
+        t.textContent = `You finished in ${fmt(elapsed)}.`;
+
+        const share = document.createElement('a');
+        share.className = 'btn-grad inline-block text-white font-semibold px-5 py-2 rounded-xl border border-white/10';
+        const tweet = `I just won the Sentient Card Game on @cotantanax Web App!\nYou can play here : sentient-card-game.vercel.app`;
+        const intent = `https://x.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
+        share.href = intent; share.target = '_blank'; share.rel = 'noopener';
+        share.textContent = 'Share on X';
+
+        const replay = document.createElement('button');
+        replay.className = 'btn-grad inline-block text-white font-semibold px-5 py-2 rounded-xl border border-white/10';
+        replay.textContent = 'Play Again';
+        replay.addEventListener('click', ()=>{ hideResult(); resetGame(); });
+
+        resContent.append(title, t, share, replay);
+      } else {
+        const title = document.createElement('div');
+        title.className = 'text-2xl font-semibold';
+        title.textContent = 'You Lost';
+        const btn = document.createElement('button');
+        btn.className = 'btn-grad text-white font-semibold px-5 py-2 rounded-xl border border-white/10';
+        btn.textContent = 'Play Again';
+        btn.addEventListener('click', ()=>{ hideResult(); resetGame(); });
+        resContent.append(title, btn);
+      }
+
+      resultModal.classList.remove('hidden');
+      resultModal.classList.add('flex');
+    }
+    function hideResult(){
+      resultModal.classList.add('hidden');
+      resultModal.classList.remove('flex');
+      boardEl.classList.remove('dim-others');
+      Array.from(document.querySelectorAll('.card')).forEach(c=> c.classList.remove('highlight'));
+      STATE.phase = 'idle';
+    }
+
+    // ---------- Login Flow ----------
+    async function applyUser(handle){
+      const clean = sanitizeHandle(handle);
+      STATE.username = clean || 'guest';
+      const chosen = await pickWorkingAvatar(clean||'guest');
+      profileAvatar.src = chosen;
+      resAvatar.src = chosen;
+      STATE.avatar = chosen;
+      profileName.textContent = '@' + STATE.username;
+      resName.textContent = '@' + STATE.username;
+    }
+
+    startBtn.addEventListener('click', async ()=>{
+      const val = usernameInput.value;
+      await applyUser(val);
+      loginModal.classList.add('hidden');
+      resetGame();
+    });
+
+    playBtn.addEventListener('click', ()=>{
+      playOverlay.classList.add('hidden');
+      startMemorize();
+    });
+
+    clearLBBtn.addEventListener('click', ()=>{
+      localStorage.removeItem('sentientCardLeaderboard');
+      renderLeaderboard();
+    });
+
+    usernameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ startBtn.click(); }});
+
+    // Initialize with login modal open
+    renderLeaderboard();
+  </script>
+
+  <!-- Deployment Notes (read-only in HTML source) -->
+  <!--
+  Global Leaderboard Guidance:
+  - LocalStorage only saves on the player's own browser. For a global board use any of:
+    1) Supabase (Postgres + Row Level Security) with Edge Functions — simple REST calls from the browser.
+    2) Firebase (Firestore) — save {username, avatar, bestMs, updatedAt} documents; secure with rules.
+    3) Vercel KV or Vercel Postgres — add a small API route (/api/score) to read/write scores securely.
+  - Minimal API shape (example JSON):
+      POST /api/score { username, avatar, ms }
+      GET  /api/score -> [{ username, avatar, bestMs }]
+    The client would replace load/saveLeaderboard with fetch() calls to your API.
+  - Always validate inputs server-side, normalize handles lowercase, and only update if ms < existing best.
+  -->
+  <!-- Credit badge -->
+  <div class="fixed bottom-3 right-3 z-20">
+    <div class="gradient-border rounded-xl">
+      <a href="https://x.com/cotantanax" target="_blank" rel="noopener" class="glass glow-pane border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 hover:text-white inline-block">
+        Developed by <strong class="font-semibold">Elliottyu</strong>
+      </a>
+    </div>
+  </div>
+</body>
 </html>
