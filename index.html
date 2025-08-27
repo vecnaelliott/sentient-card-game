@@ -108,7 +108,7 @@
 
   <!-- LOGIN POPUP -->
   <div id="loginModal" class="fixed inset-0 z-pop flex items-center justify-center backdrop-blur-sm">
-    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
     <div class="relative w-[92%] max-w-md rounded-2xl glass glow-pane border border-white/10 p-6">
       <h3 class="text-lg font-semibold mb-1">Your X Username</h3>
       <p class="text-sm text-gray-400 mb-4">Enter your handle to show your avatar in-game.</p>
@@ -486,9 +486,10 @@
       resName.textContent = '@' + STATE.username;
     }
 
-    startBtn.addEventListener('click', async ()=>{
+    startBtn.addEventListener('click', async (e)=>{
+      e.preventDefault();
       const val = usernameInput.value;
-      await applyUser(val);
+      try { await applyUser(val); } catch (err) { console.warn('applyUser failed', err); }
       loginModal.classList.add('hidden');
       resetGame();
     });
